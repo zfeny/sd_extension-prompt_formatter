@@ -36,6 +36,7 @@ re_is_wildcard = re.compile(r'{.*}')
 re_AND = re.compile(r'(.*?)\s*(AND)\s*(.*?)')
 re_pipe = re.compile(r'\s*(\|)\s*')
 re_existing_weight = re.compile(r'(?<=:)(\d+.?\d*|\d*.?\d+)(?=[)\]]$)')
+re_curly_brackets = re.compile(r'\{.*?\}') # 对花括号的处理
 
 '''
 References
@@ -285,6 +286,14 @@ def bracket_to_weights(prompt: str):
         
         pos = match.start()
 
+# 在bracket_to_weights函数中,添加对花括号的处理:
+        match = re_curly_brackets.search(ret, pos)
+        if match:
+            weight = 1.05
+            ret = ret[:match.start()] + f'(:{weight:.2f})' + ret[match.end():]
+            pos = match.start() + 1
+            return ret
+
 
 def depth_to_map(s: str):
     ret = ''
@@ -310,8 +319,12 @@ def depth_to_gradeint(s: str):
     return ret
     
 
+# 为保持一致,在get_mappings函数中添加对花括号的处理:
+# def filter_brackets(s: str):
+#     return ''.join(list(map(lambda c : c if c in '[]()' else ' ', s)))
+
 def filter_brackets(s: str):
-    return ''.join(list(map(lambda c : c if c in '[]()' else ' ', s)))
+    return ''.join(list(map(lambda c : c if c in '[](){ }' else ' ', s)))
 
 
 def get_mappings(s: str):
